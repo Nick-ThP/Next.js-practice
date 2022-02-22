@@ -1,46 +1,38 @@
-import { useEffect, useState } from "react";
+import Head from 'next/head';
 import MeetupList from "../components/meetups/MeetupList";
+import { MongoClient } from "mongodb";
+import { Fragment } from 'react';
 
-const DUMMY_MEETUPS = [
-    {
-        id: 'm1',
-        title: 'A First Meetup',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Aalborg_from_the_Aalborg_tower.jpg',
-        address: 'Det er måjerfucking 9000',
-        description: 'blablabla'
-    },
-    {
-        id: 'm2',
-        title: 'A First Meetup',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Aalborg_from_the_Aalborg_tower.jpg',
-        address: 'Det er måjerfucking 9000',
-        description: 'blablabla'
-    },
-    {
-        id: 'm3',
-        title: 'A First Meetup',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Aalborg_from_the_Aalborg_tower.jpg',
-        address: 'Det er måjerfucking 9000',
-        description: 'blablabla'
-    }
-];
-
-function HomePage() {
-    const [loadedMeetups, setLoadedMeetups] = useState([]);
-
-    useEffect(() => {
-        setLoadedMeetups(DUMMY_MEETUPS);
-    }, []);
-
-    return ( 
-        <MeetupList meetups={loadedMeetups} />
+function HomePage(props) {
+    return (
+        <Fragment>
+            <Head>
+                <title>React Meetups</title>
+                <meta name="description" content="Browse react meetups" />
+            </Head>
+            <MeetupList meetups={props.meetups} />
+        </Fragment> 
      );
 }
 
 export async function getStaticProps() {
+
+    const client = await MongoClient.connect(
+        ''
+    );
+    const db = client.db();
+    const meetupsCollection = db.collection('meetups');
+    const meetups = await meetupsCollection.find().toArray();
+    client.close();
+
     return {
         props: {
-            meetups: DUMMY_MEETUPS
+            meetups: meetups.map(meetup => ({
+                title: meetup.title,
+                address: meetup.address,
+                image: meetup.image,
+                id: meetup._id.toString()
+            }))
         },
         revalidate: 1
     };
